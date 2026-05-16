@@ -54,3 +54,36 @@ Files you MUST NOT touch:
 - `*.config.*`
 - `.github/workflows/*`
 - `.env*`
+
+---
+
+## Verification audit 2026-05-16 (claude, domus-scope)
+
+Empirical audit run from domus-scope under "complete all completely"
+authorization (carry-forward closure). ~47 days elapsed since handoff
+issuance (2026-03-30 → 2026-05-16).
+
+**Verified deliverable absence:**
+- `drafts/` — not present
+- `essays/` — not present
+- `outlines/` — not present
+- Repo commit log since 2026-03-30 contains no commit matching
+  "solo|practitioner|enterprise" (case-insensitive).
+
+**State as of 2026-05-16:** STALLED. Gemini did not pick up. Work-type is
+`content_generation` per dispatch matrix; Claude's role on that work-type
+is "Consider," so this audit deliberately does not absorb the work into
+Claude's scope — that would bypass the user's routing preference for
+content.
+
+**Decision surface (not taken in this audit, surfaced for user):**
+- (a) Re-issue to Gemini in a fresh dispatch (with the 47d-since reset)
+- (b) Re-issue to Claude explicitly ("I want this in this session" → I'll do it)
+- (c) Close as no-longer-relevant if the III→V entailment essay has been
+  superseded by other writing
+- (d) Adjust scope: e.g. produce a one-page argument map first; commission
+  a full draft later
+
+This handoff is not archived (envelope's own gate not met); this amendment
+is the verified-state overlay.
+
