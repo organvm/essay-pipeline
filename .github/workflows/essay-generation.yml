@@ -24,29 +24,29 @@ jobs:
 
     steps:
       - name: Checkout essay-pipeline
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout editorial-standards
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: organvm-v-logos/editorial-standards
           path: editorial-standards
 
       - name: Checkout public-process
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: organvm-v-logos/public-process
           path: public-process
 
       - name: Checkout reading-observatory (feeds only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: organvm-v-logos/reading-observatory
           path: reading-observatory
           sparse-checkout: feeds/
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
