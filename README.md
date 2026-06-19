@@ -87,6 +87,29 @@ Optional integrity keys:
 
 Unknown frontmatter keys are rejected by the validator to prevent schema drift.
 
+## Template Library (commercial)
+
+The same structural contract the validator enforces is also packaged as a
+sellable product: a catalog of **schema-enforced essay templates**. One free
+sample (`field-note`) ships open; the premium templates are unlocked once with a
+one-time-purchase license key (HMAC key check, no server, no subscription).
+
+- Catalog & pricing: [docs/templates/README.md](docs/templates/README.md)
+- Machine-readable manifest: `templates/manifest.yaml`
+- Storefront / gate: `src/template_store.py` — browse, show, and eject templates
+- License keys: `src/license.py` — issue (seller) and verify (buyer)
+- Design rationale: [docs/adr/003-template-library-licensing.md](docs/adr/003-template-library-licensing.md)
+
+```bash
+essay-template list                         # free shows "open", premium "locked"
+essay-template show field-note              # free — no key needed
+essay-license issue --email buyer@x.com     # seller mints a key after a sale
+essay-template eject case-study --output drafts/my-essay.md --license EPK1.…
+```
+
+Pricing: **$49** for any single premium template (`premium-single`), **$99** for
+the full bundle (`premium-bundle`).
+
 ## Workflow Integration
 
 Active repository workflows:
