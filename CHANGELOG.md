@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Packaged the schema-enforced essay templates as a sellable **template library**: a docs catalog (`docs/templates/README.md`), a machine-readable catalog (`templates/manifest.yaml`), one free sample template, and five premium templates (`templates/free/`, `templates/premium/`)
+- Added `src/license.py` — offline HMAC-SHA256 license keys (issue/verify CLI, `EPK1.<payload>.<sig>` format) for the one-time-purchase ($49 single / $99 bundle) gate
+- Added `src/template_store.py` — licensed storefront CLI (`essay-template list|show|eject`) that serves free templates openly and gates premium ones behind a valid license
+- Added `essay-template` and `essay-license` console scripts to `pyproject.toml`
+- Added ADR 003 documenting the HMAC licensing decision (`docs/adr/003-template-library-licensing.md`)
+- Added `tests/test_license.py` and `tests/test_template_store.py`
 - Extended `src/topic_suggester.py` with configurable thresholds/limits (`tag-threshold`, `surfaced-threshold`, `max-suggestions`, `per-type-limit`)
 - Added suggestion ranking pipeline: score normalization, priority buckets, effort estimates, deduplication, per-type balancing, and stable rank assignment
 - Added corpus-aware helpers for tag co-occurrence and companion-tag inference to enrich suggestion payloads

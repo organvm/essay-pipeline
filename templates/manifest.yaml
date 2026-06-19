@@ -1,0 +1,56 @@
+# Catalog of essay templates sold by the essay-pipeline template library.
+#
+# Tiers:
+#   free     — readable by anyone, no license required (the sample template).
+#   premium  — gated behind a valid HMAC license key (see src/license.py).
+#
+# Consumed by src/template_store.py. Each `path` is relative to this directory.
+
+catalog_version: "1.0"
+currency: USD
+pricing:
+  premium-single: 49    # any one premium template
+  premium-bundle: 99    # the whole premium set, all future additions included
+
+templates:
+  - id: field-note
+    tier: free
+    path: free/field-note.md
+    title: "Field Note"
+    summary: "Short, single-claim essay. Free sample of the library."
+    best_for: "Quick observations defended in a few hundred words."
+
+  - id: case-study
+    tier: premium
+    path: premium/case-study.md
+    title: "Building-in-Public Case Study"
+    summary: "Problem → approach → result, with the receipts."
+    best_for: "Documenting a piece of work end to end, honestly."
+
+  - id: technical-deep-dive
+    tier: premium
+    path: premium/technical-deep-dive.md
+    title: "Technical Deep Dive"
+    summary: "Architecture / mechanism walkthrough for a technical reader."
+    best_for: "Explaining how a component actually works."
+
+  - id: sprint-retrospective
+    tier: premium
+    path: premium/sprint-retrospective.md
+    title: "Sprint Retrospective"
+    summary: "Structured retrospective on a sprint or milestone."
+    best_for: "Closing a sprint with plan-vs-reality honesty."
+
+  - id: announcement
+    tier: premium
+    path: premium/announcement.md
+    title: "Release Announcement"
+    summary: "Launch announcement that stays substantive instead of hype."
+    best_for: "Shipping something and telling people why it matters."
+
+  - id: argument-essay
+    tier: premium
+    path: premium/argument-essay.md
+    title: "Argument Essay"
+    summary: "Thesis-driven opinion essay that earns its conclusion."
+    best_for: "Taking a defensible position on a contested question."
