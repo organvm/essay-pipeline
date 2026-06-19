@@ -7,9 +7,23 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+# Least-privilege: CI only needs to read the repo contents.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Cover the full supported range from pyproject (requires-python >=3.10).
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout essay-pipeline
         uses: actions/checkout@v6
@@ -23,10 +37,12 @@ jobs:
       - name: Symlink editorial-standards as sibling for schema path resolution
         run: ln -s "$GITHUB_WORKSPACE/editorial-standards-checkout" "$GITHUB_WORKSPACE/../editorial-standards"
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
