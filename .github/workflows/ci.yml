@@ -26,10 +26,10 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout essay-pipeline
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout editorial-standards
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: organvm-v-logos/editorial-standards
           path: editorial-standards-checkout

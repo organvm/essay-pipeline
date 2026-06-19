@@ -15,30 +15,30 @@ jobs:
 
     steps:
       - name: Checkout essay-pipeline
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout editorial-standards
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: organvm-v-logos/editorial-standards
           path: editorial-standards
 
       - name: Checkout public-process (data only)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: organvm-v-logos/public-process
           path: public-process
           sparse-checkout: data/
 
       - name: Checkout analytics-engine (data only)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: organvm-v-logos/analytics-engine
           path: analytics-engine
           sparse-checkout: data/
 
       - name: Checkout reading-observatory (feeds only)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: organvm-v-logos/reading-observatory
           path: reading-observatory
