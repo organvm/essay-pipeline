@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout essay-pipeline
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout public-process
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: organvm-v-logos/public-process
           path: public-process
