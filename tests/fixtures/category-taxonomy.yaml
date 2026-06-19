@@ -1,0 +1,9 @@
+categories:
+  meta-system:
+    description: Essays about the ORGANVM system as a system.
+  case-study:
+    description: Focused studies of a repository, workflow, or incident.
+  technical-deep-dive:
+    description: Implementation-centered essays.
+  process-note:
+    description: Short process observations.
