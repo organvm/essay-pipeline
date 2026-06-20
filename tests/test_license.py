@@ -21,6 +21,22 @@ class TestRoundTrip:
         assert lic == License(sku="premium-bundle", email="buyer@example.com", issued="2026-06-19")
         assert lic.covers_premium() is True
 
+    def test_expiring_license_roundtrips(self):
+        key = issue_license(
+            "buyer@example.com",
+            sku="premium-subscription",
+            issued="2026-06-19",
+            expires="2026-07-19",
+            secret=SECRET,
+        )
+        lic = verify_license(key, secret=SECRET)
+        assert lic == License(
+            sku="premium-subscription",
+            email="buyer@example.com",
+            issued="2026-06-19",
+            expires="2026-07-19",
+        )
+
     def test_default_secret_roundtrips_without_config(self):
         key = issue_license("buyer@example.com")
         lic = verify_license(key)
@@ -95,6 +111,33 @@ class TestUnknownSku:
         key = issue_license("a@b.co", sku="mystery", secret=SECRET)
         lic = verify_license(key, secret=SECRET)
         assert lic.covers_premium() is False
+
+
+class TestPremiumCoverage:
+    def test_unexpired_subscription_covers_premium(self):
+        key = issue_license(
+            "a@b.co",
+            sku="premium-subscription",
+            expires="2026-07-19",
+            secret=SECRET,
+        )
+        lic = verify_license(key, secret=SECRET)
+        assert lic.covers_premium(as_of="2026-07-01") is True
+
+    def test_expired_subscription_does_not_cover_premium(self):
+        key = issue_license(
+            "a@b.co",
+            sku="premium-subscription",
+            expires="2026-07-19",
+            secret=SECRET,
+        )
+        lic = verify_license(key, secret=SECRET)
+        assert lic.covers_premium(as_of="2026-07-20") is False
+
+    def test_subscription_sku_requires_expiration(self):
+        key = issue_license("a@b.co", sku="premium-subscription", secret=SECRET)
+        lic = verify_license(key, secret=SECRET)
+        assert lic.covers_premium(as_of="2026-07-01") is False
 
 
 def test_default_secret_is_documented_demo_value():

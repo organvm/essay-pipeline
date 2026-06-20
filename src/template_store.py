@@ -20,7 +20,7 @@ from pathlib import Path
 
 import yaml
 
-from .license import LicenseError, is_valid, verify_license
+from .license import LicenseError, verify_license
 
 # templates/ lives at the repo root, one level up from src/.
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
@@ -148,7 +148,7 @@ def read_template(
 
 def _cmd_list(args: argparse.Namespace) -> int:
     entries = list_templates()
-    unlocked_premium = is_valid(args.license)
+    unlocked_premium = _license_grants_premium(args.license, None)
     print(f"{'ID':<22} {'TIER':<8} {'ACCESS':<10} TITLE")
     print("-" * 72)
     for entry in entries:

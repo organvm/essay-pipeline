@@ -6,6 +6,7 @@ from src.license import issue_license
 from src.template_store import (
     LicenseRequired,
     TemplateNotFound,
+    _cmd_list,
     get_entry,
     is_unlocked,
     list_templates,
@@ -73,6 +74,26 @@ class TestGate:
         body = read_template("technical-deep-dive", license_key=key, secret=SECRET)
         assert "layout: essay" in body
 
+    def test_active_subscription_license_grants_access(self):
+        key = issue_license(
+            "a@b.co",
+            sku="premium-subscription",
+            expires="2999-01-01",
+            secret=SECRET,
+        )
+        body = read_template("technical-deep-dive", license_key=key, secret=SECRET)
+        assert "layout: essay" in body
+
+    def test_expired_subscription_license_does_not_unlock(self):
+        key = issue_license(
+            "a@b.co",
+            sku="premium-subscription",
+            expires="2000-01-01",
+            secret=SECRET,
+        )
+        with pytest.raises(LicenseRequired):
+            read_template("case-study", license_key=key, secret=SECRET)
+
     def test_unknown_sku_does_not_unlock(self):
         key = issue_license("a@b.co", sku="freebie", secret=SECRET)
         with pytest.raises(LicenseRequired):
@@ -88,3 +109,17 @@ class TestIsUnlocked:
 
     def test_premium_unlocked_with_key(self):
         assert is_unlocked(get_entry("case-study"), license_key=_bundle_key(), secret=SECRET) is True
+
+
+class TestListCommand:
+    def test_expired_subscription_is_listed_as_locked(self, capsys):
+        key = issue_license(
+            "a@b.co",
+            sku="premium-subscription",
+            expires="2000-01-01",
+        )
+        assert _cmd_list(type("Args", (), {"license": key})()) == 0
+
+        out = capsys.readouterr().out
+        assert "unlocked" not in out
+        assert "locked" in out
