@@ -14,18 +14,9 @@ from src.validator import (
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
-SCHEMA_PATH = str(
-    Path(__file__).parent.parent.parent
-    / "editorial-standards"
-    / "schemas"
-    / "frontmatter-schema.yaml"
-)
-LOG_SCHEMA_PATH = str(
-    Path(__file__).parent.parent.parent
-    / "editorial-standards"
-    / "schemas"
-    / "log-schema.yaml"
-)
+EDITORIAL_FIXTURES = FIXTURES / "editorial"
+SCHEMA_PATH = str(EDITORIAL_FIXTURES / "frontmatter-schema.yaml")
+LOG_SCHEMA_PATH = str(EDITORIAL_FIXTURES / "log-schema.yaml")
 
 
 class TestValidatorMain:

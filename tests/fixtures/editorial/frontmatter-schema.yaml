@@ -1,0 +1,51 @@
+required_fields:
+  layout:
+    type: string
+    enum: [essay]
+  title:
+    type: string
+    min_length: 10
+    max_length: 200
+  author:
+    type: string
+    pattern: "^@"
+  date:
+    type: string
+    pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+  tags:
+    type: list
+    min_items: 2
+    max_items: 8
+    item_type: string
+    item_pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+  category:
+    type: string
+    enum: [meta-system, case-study, guide, retrospective, announcement, technical-deep-dive]
+  excerpt:
+    type: string
+    min_length: 50
+    max_length: 400
+  portfolio_relevance:
+    type: string
+    enum: [CRITICAL, HIGH, MEDIUM]
+  related_repos:
+    type: list
+    min_items: 1
+    item_type: string
+    item_pattern: "^(organvm-|meta-organvm)"
+  reading_time:
+    type: string
+    pattern: "^\\d+ min$"
+  word_count:
+    type: integer
+    min: 500
+optional_fields:
+  references:
+    type: list
+    item_type: string
+  word_count_policy:
+    type: string
+    enum: [computed, external]
+  word_count_override_reason:
+    type: string
+    min_length: 20
