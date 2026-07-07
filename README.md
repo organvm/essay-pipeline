@@ -10,6 +10,8 @@ _Essay automation engine for the ORGAN-V discourse layer_
 
 ## Overview
 
+### What It Is
+
 essay-pipeline is the automation backbone behind ORGAN-V's public-process discourse layer. Where [public-process](https://github.com/organvm-v-logos/public-process) is the published surface -- the Jekyll site hosting essays, sprint narratives, and meta-system reflections -- essay-pipeline is the machinery underneath: a set of Python scripts and GitHub Actions workflows that monitor system activity across all eight organs, validate essay frontmatter against a strict schema, generate sprint narrative drafts from cross-organ telemetry, and maintain a searchable index of every published essay.
 
 The pipeline operates on a simple principle: the organvm eight-organ system generates a continuous stream of events -- promotions, CI passes, new repos, dependency changes, milestone completions -- and those events are raw material for public discourse. essay-pipeline converts that raw material into structured essay topics, validates that essays meet publication standards before they reach the Jekyll build, and keeps the entire corpus indexed for cross-referencing and discovery.
@@ -121,7 +123,20 @@ Runs lint/test validation for the package and repo structure checks.
 Surfaced-reading input contract (producer: `reading-observatory`, consumer: `essay-pipeline`):
 - [docs/data-contract-surfaced-items.md](docs/data-contract-surfaced-items.md)
 
-## Development
+## Pricing, Monetization & Who Pays
+
+**Tier: Standard**
+
+As an internal infrastructure tool for the ORGAN-V public process layer, `essay-pipeline` is fully open-source (MIT licensed) and does not generate direct revenue. It belongs to the **Standard** tier of the organvm portfolio. 
+
+### Who Pays?
+The operational costs for this pipeline are minimal but non-zero. They include:
+- **LLM API Usage:** `src/essay_drafter.py` consumes API tokens from Anthropic, OpenAI, or Gemini.
+- **Compute:** Execution runs on GitHub Actions (which consumes free-tier CI/CD minutes).
+
+These costs are subsidized entirely by the maintainer and offset by revenue-generating products in the **ORGAN-III (Commerce)** portfolio. Users who fork this repository to run their own essay pipelines are responsible for providing their own API keys and absorbing their own LLM compute costs.
+
+## Installation
 
 ### Prerequisites
 
@@ -147,7 +162,7 @@ export ANTHROPIC_API_KEY="..."         # or OPENAI_API_KEY / GEMINI_API_KEY / PE
 export GITHUB_TOKEN="..."              # required only for github-api mode in log_generator
 ```
 
-### Running Locally
+## Usage
 
 ```bash
 # Validate essays and logs against canonical schemas
@@ -174,6 +189,8 @@ python -m src.sprint_narrator \
   --calendar ../public-process/data/publication-calendar.json \
   --output data/sprint-narrative-draft.md
 ```
+
+## Development
 
 ### Testing
 
