@@ -1,0 +1,11 @@
+{
+  "agent": "opencode",
+  "status": "idle",
+  "accepting_tasks": true,
+  "available_tokens": 47970014,
+  "available_pct": 95.9,
+  "current_task_id": "HEAL-rebase-organvm-essay-pipeline-14",
+  "heartbeat": "2026-07-06T02:16:25.552978+00:00",
+  "token_usage_pct": 4.06,
+  "clock_health": "ok"
+}
