@@ -1,0 +1,13 @@
+categories:
+  meta-system:
+    typical_count: 3
+  case-study:
+    typical_count: 2
+  guide:
+    typical_count: 1
+  retrospective:
+    typical_count: 1
+  announcement:
+    typical_count: 1
+  technical-deep-dive:
+    typical_count: 1

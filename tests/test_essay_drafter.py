@@ -15,35 +15,15 @@ from src.essay_drafter import (
     repair_frontmatter,
     validate_draft,
 )
+from src.llm_client import LLMResponse
 
 FIXTURES = Path(__file__).parent / "fixtures"
-SCHEMA_PATH = str(
-    Path(__file__).parent.parent.parent
-    / "editorial-standards"
-    / "schemas"
-    / "frontmatter-schema.yaml"
-)
-RUBRIC_PATH = str(
-    Path(__file__).parent.parent.parent
-    / "editorial-standards"
-    / "schemas"
-    / "quality-rubric.yaml"
-)
-TAG_GOV_PATH = str(
-    Path(__file__).parent.parent.parent
-    / "editorial-standards"
-    / "schemas"
-    / "tag-governance.yaml"
-)
-CAT_TAX_PATH = str(
-    Path(__file__).parent.parent.parent
-    / "editorial-standards"
-    / "schemas"
-    / "category-taxonomy.yaml"
-)
-TEMPLATE_DIR = str(
-    Path(__file__).parent.parent.parent / "editorial-standards" / "templates"
-)
+EDITORIAL_FIXTURES = FIXTURES / "editorial"
+SCHEMA_PATH = str(EDITORIAL_FIXTURES / "frontmatter-schema.yaml")
+RUBRIC_PATH = str(EDITORIAL_FIXTURES / "quality-rubric.yaml")
+TAG_GOV_PATH = str(EDITORIAL_FIXTURES / "tag-governance.yaml")
+CAT_TAX_PATH = str(EDITORIAL_FIXTURES / "category-taxonomy.yaml")
+TEMPLATE_DIR = str(EDITORIAL_FIXTURES / "templates")
 
 
 def _make_suggestion(
@@ -435,8 +415,6 @@ class TestDraftEssayIntegration:
 
     @patch("src.essay_drafter.create_client")
     def test_successful_draft(self, mock_create):
-        from src.llm_client import LLMResponse
-
         mock_client = MagicMock()
         mock_client.generate.return_value = LLMResponse(
             text=VALID_DRAFT,
@@ -446,10 +424,6 @@ class TestDraftEssayIntegration:
             output_tokens=500,
         )
         mock_create.return_value = mock_client
-
-        # Skip if editorial-standards not available
-        if not Path(SCHEMA_PATH).exists():
-            return
 
         suggestion = _make_suggestion()
         import tempfile
@@ -476,8 +450,6 @@ class TestDraftEssayIntegration:
 
     @patch("src.essay_drafter.create_client")
     def test_repair_fixes_draft(self, mock_create):
-        from src.llm_client import LLMResponse
-
         # Draft with fixable issues: wrong date format, bad tag case
         fixable_draft = VALID_DRAFT.replace(
             'date: "2026-02-27"',
@@ -493,9 +465,6 @@ class TestDraftEssayIntegration:
             output_tokens=500,
         )
         mock_create.return_value = mock_client
-
-        if not Path(SCHEMA_PATH).exists():
-            return
 
         suggestion = _make_suggestion()
         import tempfile
@@ -514,6 +483,90 @@ class TestDraftEssayIntegration:
 
             assert result["valid"] is True
             assert result["repaired"] is True
+
+    @patch("src.essay_drafter.create_client")
+    def test_retries_with_validation_feedback_and_writes_successful_retry(
+        self, mock_create, tmp_path
+    ):
+        mock_client = MagicMock()
+        mock_client.generate.side_effect = [
+            LLMResponse(
+                text="plain text without frontmatter",
+                model="test-model",
+                provider="test",
+                input_tokens=10,
+                output_tokens=20,
+            ),
+            LLMResponse(
+                text=VALID_DRAFT,
+                model="test-model",
+                provider="test",
+                input_tokens=30,
+                output_tokens=40,
+            ),
+        ]
+        mock_create.return_value = mock_client
+
+        posts_dir = tmp_path / "posts"
+        posts_dir.mkdir()
+        (posts_dir / "existing.md").write_text(
+            "---\ntitle: Existing Essay One\n---\n\nBody\n", encoding="utf-8"
+        )
+
+        result = draft_essay(
+            suggestion=_make_suggestion(),
+            template_dir=TEMPLATE_DIR,
+            schema_path=SCHEMA_PATH,
+            rubric_path=RUBRIC_PATH,
+            tag_governance_path=TAG_GOV_PATH,
+            category_taxonomy_path=CAT_TAX_PATH,
+            posts_dir=str(posts_dir),
+            output_dir=str(tmp_path / "output"),
+            provider="test",
+        )
+
+        assert result["valid"] is True
+        assert result["attempt"] == 2
+        assert Path(result["output_path"]).exists()
+        assert mock_client.generate.call_count == 2
+
+        first_system_prompt = mock_client.generate.call_args_list[0].args[0]
+        retry_user_prompt = mock_client.generate.call_args_list[1].args[1]
+        assert "Existing Essay One" in first_system_prompt
+        assert "Previous Attempt Failed Validation" in retry_user_prompt
+        assert "no valid frontmatter found" in retry_user_prompt
+
+    @patch("src.essay_drafter.create_client")
+    def test_exhausted_retries_writes_invalid_summary(self, mock_create, tmp_path):
+        mock_client = MagicMock()
+        mock_client.generate.return_value = LLMResponse(
+            text="still not markdown",
+            model="test-model",
+            provider="test",
+            input_tokens=10,
+            output_tokens=20,
+        )
+        mock_create.return_value = mock_client
+
+        result = draft_essay(
+            suggestion=_make_suggestion(),
+            template_dir=TEMPLATE_DIR,
+            schema_path=SCHEMA_PATH,
+            rubric_path=RUBRIC_PATH,
+            tag_governance_path=TAG_GOV_PATH,
+            category_taxonomy_path=CAT_TAX_PATH,
+            posts_dir=str(tmp_path / "missing-posts"),
+            output_dir=str(tmp_path / "output"),
+            provider="test",
+        )
+
+        assert result["valid"] is False
+        assert result["attempt"] == 3
+        assert result["repaired"] is False
+        assert "validation_errors" in result
+        assert any("no valid frontmatter found" in e for e in result["validation_errors"])
+        assert mock_client.generate.call_count == 3
+        assert Path(result["output_path"]).read_text(encoding="utf-8") == "still not markdown"
 
 
 # --- repair_frontmatter additional coverage --------------------------------

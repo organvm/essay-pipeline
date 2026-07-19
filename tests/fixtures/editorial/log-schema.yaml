@@ -1,0 +1,18 @@
+required_fields:
+  layout:
+    type: string
+    enum: [log]
+  title:
+    type: string
+    min_length: 5
+  date:
+    type: string
+    pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+  tags:
+    type: list
+    min_items: 1
+    item_type: string
+    item_pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+  mood:
+    type: string
+optional_fields: {}

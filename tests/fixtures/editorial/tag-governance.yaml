@@ -1,0 +1,9 @@
+preferred_tags:
+  - governance
+  - meta-system
+  - architecture
+  - testing
+rules:
+  min_per_essay: 2
+  max_per_essay: 8
+  pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
