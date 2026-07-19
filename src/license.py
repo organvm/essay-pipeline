@@ -1,8 +1,9 @@
 """Offline HMAC license keys for the essay-pipeline template library.
 
 A license key is a signed, *readable* token that encodes which product
-(``sku``) was purchased, by whom (``email``), and when (``issued``). The
-signature is an HMAC-SHA256 over that payload, truncated and base32-encoded.
+(``sku``) was purchased, by whom (``email``), when (``issued``), and optionally
+when access ends (``expires``). The signature is an HMAC-SHA256 over that
+payload, truncated and base32-encoded.
 
 Verification is fully offline: the same shared secret that signs a key also
 verifies it. This is the classic "HMAC key check" gate — it deters casual
@@ -14,6 +15,8 @@ the bundled default exists only so the gate is exercisable out of the box.
 
 CLI:
     python -m src.license issue --email buyer@example.com --sku premium-bundle
+    python -m src.license issue --email buyer@example.com \
+        --sku premium-subscription --expires 2026-07-19
     python -m src.license verify --key EPK1.<payload>.<sig>
 """
 
@@ -40,7 +43,10 @@ DEFAULT_SECRET = b"organvm-essay-pipeline-demo-secret-v1"
 KNOWN_SKUS = {
     "premium-bundle": "Every premium template in the catalog",
     "premium-single": "A single premium template (see purchase receipt)",
+    "premium-subscription": "Premium access for an active subscription period",
 }
+
+SUBSCRIPTION_SKUS = {"premium-subscription"}
 
 
 class LicenseError(Exception):
@@ -54,10 +60,31 @@ class License:
     sku: str
     email: str
     issued: str
+    expires: str | None = None
 
-    def covers_premium(self) -> bool:
+    def covers_premium(self, as_of: date | str | None = None) -> bool:
         """Whether this license grants access to premium templates."""
-        return self.sku in KNOWN_SKUS
+        if self.sku not in KNOWN_SKUS:
+            return False
+        if self.sku in SUBSCRIPTION_SKUS and not self.expires:
+            return False
+        if not self.expires:
+            return True
+
+        try:
+            expires_on = date.fromisoformat(self.expires)
+            check_date = _coerce_date(as_of)
+        except ValueError:
+            return False
+        return check_date <= expires_on
+
+
+def _coerce_date(value: date | str | None = None) -> date:
+    if value is None:
+        return date.today()
+    if isinstance(value, date):
+        return value
+    return date.fromisoformat(value)
 
 
 def _get_secret(secret: bytes | str | None = None) -> bytes:
@@ -93,6 +120,7 @@ def issue_license(
     email: str,
     sku: str = "premium-bundle",
     issued: str | None = None,
+    expires: str | None = None,
     secret: bytes | str | None = None,
 ) -> str:
     """Mint a signed license key.
@@ -101,6 +129,7 @@ def issue_license(
         email: Buyer identity embedded in the key.
         sku: Product purchased (see :data:`KNOWN_SKUS`).
         issued: ISO date string; defaults to today.
+        expires: Optional ISO date after which access is no longer granted.
         secret: Override signing secret (else env var / demo default).
 
     Returns:
@@ -110,10 +139,13 @@ def issue_license(
         LicenseError: If email or sku contain the field separator.
     """
     issued = issued or date.today().isoformat()
-    if FIELD_SEP in email or FIELD_SEP in sku:
-        raise LicenseError(f"email and sku must not contain {FIELD_SEP!r}")
+    if any(FIELD_SEP in value for value in (email, sku, expires or "")):
+        raise LicenseError(f"email, sku, and expires must not contain {FIELD_SEP!r}")
 
-    payload = f"{sku}{FIELD_SEP}{email}{FIELD_SEP}{issued}"
+    fields = [sku, email, issued]
+    if expires:
+        fields.append(expires)
+    payload = FIELD_SEP.join(fields)
     sig = _sign(payload, _get_secret(secret))
     return SEGMENT_SEP.join(
         [KEY_PREFIX, _b32(payload.encode("utf-8")), _b32(sig)]
@@ -145,11 +177,12 @@ def verify_license(key: str, secret: bytes | str | None = None) -> License:
         raise LicenseError("license signature mismatch (wrong secret or tampered key)")
 
     fields = payload.split(FIELD_SEP)
-    if len(fields) != 3:
+    if len(fields) not in {3, 4}:
         raise LicenseError("license payload has unexpected shape")
 
-    sku, email, issued = fields
-    return License(sku=sku, email=email, issued=issued)
+    sku, email, issued = fields[:3]
+    expires = fields[3] if len(fields) == 4 else None
+    return License(sku=sku, email=email, issued=issued, expires=expires)
 
 
 def is_valid(key: str | None, secret: bytes | str | None = None) -> bool:
@@ -166,7 +199,7 @@ def is_valid(key: str | None, secret: bytes | str | None = None) -> bool:
 def _cmd_issue(args: argparse.Namespace) -> int:
     if args.sku not in KNOWN_SKUS:
         print(f"WARNING: '{args.sku}' is not a known SKU {list(KNOWN_SKUS)}", file=sys.stderr)
-    key = issue_license(args.email, sku=args.sku, issued=args.issued)
+    key = issue_license(args.email, sku=args.sku, issued=args.issued, expires=args.expires)
     print(key)
     return 0
 
@@ -178,9 +211,11 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         print(f"INVALID — {exc}")
         return 1
     print("VALID")
-    print(f"  sku:    {lic.sku}")
-    print(f"  email:  {lic.email}")
-    print(f"  issued: {lic.issued}")
+    print(f"  sku:     {lic.sku}")
+    print(f"  email:   {lic.email}")
+    print(f"  issued:  {lic.issued}")
+    if lic.expires:
+        print(f"  expires: {lic.expires}")
     print(f"  premium access: {'yes' if lic.covers_premium() else 'no'}")
     return 0
 
@@ -195,6 +230,9 @@ def main() -> None:
         "--sku", default="premium-bundle", help="Product SKU (default: premium-bundle)"
     )
     p_issue.add_argument("--issued", default=None, help="ISO issue date (default: today)")
+    p_issue.add_argument(
+        "--expires", default=None, help="ISO expiration date for subscription grants"
+    )
     p_issue.set_defaults(func=_cmd_issue)
 
     p_verify = sub.add_parser("verify", help="Verify a license key")
